@@ -1,0 +1,47 @@
+#!/usr/bin/expect
+set timeout 9
+set username config
+set password config
+set hostname [lindex $argv 0]
+set package  [lindex $argv 1]
+set command  "rpm -qa | grep $package"
+log_user 0
+
+if {[llength $argv] == 0} {
+  send_user "Usage: rcheck \'hostname\' \'package name\'\n"
+  exit 1
+}
+
+send_user "\n###### $hostname ######\n"
+
+spawn ssh -q -o StrictHostKeyChecking=no $username@$hostname
+
+expect {
+  timeout { send_user "\nFailed to get password prompt\n"; exit 1 }
+  eof { send_user "\nSSH failure for $hostname\n"; exit 1 }
+  "*assword"  {
+    send "$password\r"
+  }
+}
+expect {
+  timeout { send_user "\nLogin failed. Password incorrect.\n"; exit 1}
+  "*\$ "
+}
+
+send "$command\r"
+    set lineterminationChar "\r"
+   expect "$command\r" 
+   set output " "
+   expect   {
+             $lineterminationChar   { append output $expect_out(buffer);exp_continue}
+             eof                    { append output $expect_out(buffer)}
+             }
+puts $output
+#expect {
+# "*#" { send_user "$package is not installed\n"}
+#  "$package" { send_user "$package is installed\n" }
+#} 
+  
+send_user "\n###### $hostname ######\n"
+send "exit\r"
+close

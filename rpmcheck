@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [[ -z $1 ]];then
+ echo "Usage: rpmcheck 'package name'"
+ exit 1
+fi
+
+host=`cat hosts.cfg`
+for i in $host
+do 
+rcheck $i $1 
+done
